@@ -67,7 +67,19 @@ namespace upc {
     /// \TODO Implement a rule to decide whether the sound is voiced or not.
     /// * You can use the standard features (pot, r1norm, rmaxnorm),
     ///   or compute and use other ones.
-    return true;
+    /// \DONE Implementación y optimización de la regla de decisión sordo/sonoro parametrizada:
+    /// Clasificamos la trama como sorda (true) empleando los umbrales configurables (pot_th, rmax_th, r1_th):
+    /// 1) Si la potencia en dB es menor que pot_th (silencio o ruido de fondo).
+    /// 2) Si el máximo secundario normalizado es menor que rmax_th (baja periodicidad).
+    /// 3) Si la correlación a lag 1 (r1norm) es menor que r1_th (fricativa sorda), salvo que rmaxnorm > 0.50.
+    if (pot < pot_th)
+      return true;
+    if (rmaxnorm < rmax_th)
+      return true;
+    if (r1norm < r1_th && rmaxnorm < 0.50F)
+      return true;
+
+    return false;
   }
 
   float PitchAnalyzer::compute_pitch(vector<float> & x) const {
@@ -92,7 +104,10 @@ namespace upc {
 	///    - The lag corresponding to the maximum value of the pitch.
     ///	   .
 	/// In either case, the lag should not exceed that of the minimum value of the pitch.
-
+  /// \DONE Búsqueda de la posición del máximo secundario de la autocorrelación usando iteradores
+  /// y std::max_element() dentro del rango válido de retardos [npitch_min, npitch_max).
+    iRMax = std::max_element(r.begin() + npitch_min, r.begin() + npitch_max); // Buscamos el máximo entre lag_min y lag_max
+   
     unsigned int lag = iRMax - r.begin();
 
     float pot = 10 * log10(r[0]);

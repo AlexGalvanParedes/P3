@@ -30,6 +30,10 @@ namespace upc {
       samplingFreq, ///< sampling rate (in samples per second). Has to be set in the constructor call
       npitch_min, ///< minimum value of pitch period, in samples
       npitch_max; ///< maximum value of pitch period, in samples
+
+    float pot_th,   ///< umbral de potencia (dB) para la decisión sonoro/sordo
+      r1_th,        ///< umbral de autocorrelación normalizada en lag=1 (r[1]/r[0])
+      rmax_th;      ///< umbral del máximo secundario normalizado (r[lag]/r[0])
  
 	///
 	/// Computes correlation from lag=0 to r.size()
@@ -52,13 +56,17 @@ namespace upc {
 					unsigned int sFreq,			///< Sampling rate in Hertzs
 					Window w=PitchAnalyzer::HAMMING,	///< Window type
 					float min_F0 = MIN_F0,		///< Pitch range should be restricted to be above this value
-					float max_F0 = MAX_F0		///< Pitch range should be restricted to be below this value
+					float max_F0 = MAX_F0,		///< Pitch range should be restricted to be below this value
+					float p_th = -47.0F,		///< Default power threshold in dB
+					float r1_t = 0.82F,			///< Default r[1]/r[0] threshold
+					float rmax_t = 0.33F		///< Default r[lag]/r[0] threshold
 				 )
 	{
       frameLen = fLen;
       samplingFreq = sFreq;
       set_f0_range(min_F0, max_F0);
       set_window(w);
+      set_unvoiced_thresholds(p_th, r1_t, rmax_t);
     }
 
 	///
@@ -102,6 +110,15 @@ namespace upc {
     /// Sets pitch range: takes min_F0 and max_F0 in Hz, sets npitch_min and npitch_max in samples
 	///
     void set_f0_range(float min_F0, float max_F0);
+
+  ///
+    /// Sets thresholds for the unvoiced decision rule
+	///
+    void set_unvoiced_thresholds(float p_th, float r1_t, float rmax_t) {
+      pot_th = p_th;
+      r1_th = r1_t;
+      rmax_th = rmax_t;
+    }
   };
 }
 #endif
