@@ -12,6 +12,18 @@ namespace upc {
 
     for (unsigned int l = 0; l < r.size(); ++l) {
   		/// \TODO Compute the autocorrelation r[l]
+      /// \DONE Cálculo de la autocorrelación sesgada r[l] para cada retardo (lag) l:
+      /// - Inicializamos el acumulador r[l] a 0.
+      /// - Acumulamos el producto cruzado x[n] * x[n + l] dentro de los límites de la trama.
+      /// - Dividimos entre el tamaño total de la trama N = x.size() para normalizar (estimador sesgado).
+      /// \f[
+      ///   r[l] = \frac{1}{N}\sum_{n=0}^{N-1-l}x[n]x[n+l]
+      /// \f]
+      r[l] = 0.0F; // Inicializamos la autocorrelación en el lag l a cero
+      for (unsigned int n = 0; n < x.size() - l; ++n) {
+        r[l] += x[n] * x[n + l]; // Acumulamos el producto de la señal con su versión desplazada l muestras
+      }
+      r[l] /= x.size(); // Dividimos por el número total de muestras N de la trama (autocorrelación sesgada)
     }
 
     if (r[0] == 0.0F) //to avoid log() and divide zero 
@@ -27,6 +39,11 @@ namespace upc {
     switch (win_type) {
     case HAMMING:
       /// \TODO Implement the Hamming window
+      /// \DONE Implementación de la ventana de Hamming estándar de longitud frameLen:
+      /// w[i] = 0.54 - 0.46 * cos(2 * pi * i / (frameLen - 1))
+      for (unsigned int i = 0; i < frameLen; ++i) {
+        window[i] = 0.54F - 0.46F * cos((2.0F * M_PI * i) / (frameLen - 1)); // Coeficientes de Hamming
+      }
       break;
     case RECT:
     default:

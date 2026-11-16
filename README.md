@@ -15,12 +15,38 @@ Ejercicios básicos
 
    * Complete el cálculo de la autocorrelación e inserte a continuación el código correspondiente.
 
+   >Para estimar la frecuencia fundamental ($f_0$) en el dominio temporal empleamos la **autocorrelación sesgada** de la trama enventanada $x[n]$ de longitud $N$ muestras (`x.size()`). Para cada desplazamiento o retardo (*lag*) $l \in [0, \text{npitch\_max}-1]$, se inicializa `r[l]` a cero, se acumula el producto $x[n] \cdot x[n+l]$ para $0 \le n < N - l$ y se divide por $N$. De este modo, $r[0]$ representa directamente la potencia media de la trama y el estimador presenta menor varianza para retardos elevados. Adicionalmente, se ha implementado la ventana de Hamming en el método `set_window()`.
+
+   ```cpp
+   void PitchAnalyzer::autocorrelation(const vector<float> &x, vector<float> &r) const {
+
+     for (unsigned int l = 0; l < r.size(); ++l) {
+       /// \TODO Compute the autocorrelation r[l]
+       /// \DONE Cálculo de la autocorrelación sesgada r[l] para cada retardo (lag) l:
+       r[l] = 0.0F; // Inicializamos la autocorrelación en el lag l a cero
+       for (unsigned int n = 0; n < x.size() - l; ++n) {
+         r[l] += x[n] * x[n + l]; // Acumulamos el producto de la señal desplazada l muestras
+       }
+       r[l] /= x.size(); // Normalizamos por el número total de muestras N de la trama
+     }
+
+     if (r[0] == 0.0F) // to avoid log() and divide zero 
+       r[0] = 1e-10; 
+   }
+   ```
+
    * Inserte una gŕafica donde, en un *subplot*, se vea con claridad la señal temporal de un segmento de
      unos 30 ms de un fonema sonoro y su periodo de pitch; y, en otro *subplot*, se vea con claridad la
 	 autocorrelación de la señal y la posición del primer máximo secundario.
 
 	 NOTA: es más que probable que tenga que usar Python, Octave/MATLAB u otro programa semejante para
 	 hacerlo. Se valorará la utilización de la biblioteca matplotlib de Python.
+
+   >Mediante el script `scripts/plot_autocorr.py` (utilizando `numpy` y `matplotlib` en Python), se ha extraído una trama sonora de $30\text{ ms}$ ($N = 600$ muestras a $f_s = 20\text{ kHz}$) perteneciente al archivo `pitch_db/train/sb002.wav` en el instante $t = 0.66\text{ s}$.
+
+   >En el primer *subplot* se observa la clara estructura casi periódica del fonema sonoro en el dominio temporal, señalando su periodo fundamental $T_0 = 4.05\text{ ms}$. En el segundo *subplot* se representa la función de autocorrelación sesgada $r[l]$, donde se distingue el máximo principal en el origen ($l = 0$, igual a la potencia media de la trama) y se localiza el **primer máximo secundario** fuera del lóbulo central en el retardo $l = 81\text{ muestras}$ (dentro del rango de búsqueda $l \in [40, 400]$ muestras correspondiente a $[50, 500]\text{ Hz}$). Esto determina directamente un periodo de pitch $T_0 = 81 / 20000 = 4.05\text{ ms}$ y una frecuencia fundamental estimada de $f_0 = 20000 / 81 \approx 246.9\text{ Hz}$.
+
+   ![Señal temporal y autocorrelación de un segmento sonoro](img/autocorrelacion_pitch.png)
 
    * Determine el mejor candidato para el periodo de pitch localizando el primer máximo secundario de la
      autocorrelación. Inserte a continuación el código correspondiente.
